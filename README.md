@@ -83,15 +83,18 @@ Net read: core text-to-SQL behavior is consistent across providers (the same two
 
 ```
 nba_text_to_sql_project/
-├── text_to_sql_project/
-│   ├── agent/
-│   │   ├── graph.py       # graph construction and compilation
-│   │   ├── nodes.py       # node implementations
-│   │   ├── prompts.py     # prompt templates
-│   │   ├── state.py       # shared state definition
-│   │   └── helpers.py     # shared utilities
-│   └── data/
-│       └── nba.sqlite     # local SQLite database — not committed, see Setup
+├── agent/
+│   ├── graph.py                 # graph construction and compilation
+│   ├── nodes.py                 # node implementations
+│   ├── prompts.py                # prompt templates
+│   ├── state.py                   # shared state definition
+│   ├── helpers.py                  # shared utilities
+│   ├── eval_datasets.py             # LangSmith eval dataset upload (one-time)
+│   ├── eval.py                       # evaluators + experiment runner
+│   └── eval_dataset_results/          # ground-truth CSVs backing the eval dataset
+├── data/
+│   └── nba.sqlite                      # local SQLite database — not committed, see Setup
+├── backfill.py                          # one-time data-loading utility — AI-generated, see Setup
 ├── pyproject.toml
 ├── uv.lock
 └── README.md
