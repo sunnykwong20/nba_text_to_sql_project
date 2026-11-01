@@ -1,0 +1,28 @@
+# Environment / secrets
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+
+# Data — the sqlite DB (~5GB) and raw CSVs (~2.3GB, mostly play_by_play.csv)
+# are both too large for a normal git push (GitHub hard-rejects any file
+# over 100MB). Document in the README how to obtain/rebuild this instead
+# of committing it.
+data/
+
+# Logs / scratch
+*.log
+readme_versions/
+test_scripts/
+graph.png
+agent/patch_refuse_check_metadata.py
+
+# Editor / OS
+.vscode/
+.DS_Store

@@ -1,0 +1,20 @@
+[project]
+name = "text-to-sql-project"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.14"
+dependencies = [
+    "langchain-anthropic>=1.7.2",
+    "langchain-google-genai>=4.4.0",
+    "langgraph>=1.2.11",
+    "langsmith>=0.12.6",
+    "python-dotenv>=1.2.3",
+]
+
+[project.scripts]
+text-to-sql-project = "text_to_sql_project:main"
+
+[build-system]
+requires = ["uv_build>=0.12.15,<0.13.0"]
+build-backend = "uv_build"
