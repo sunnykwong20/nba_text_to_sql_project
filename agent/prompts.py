@@ -2,6 +2,31 @@ from pydantic import BaseModel, Field
 
 #Script of prompts and all prompt related functions
 
+############# For Node 0: Check Scope 
+
+class ScopeResult(BaseModel):
+    in_scope: bool = Field(description="Whether the question is in scope to be able to answer with NBA data")
+    scope_reason: str = Field(description="The reason why the question is in scope or not in scope")
+
+SCOPE_PROMPT = """You are given a user's question and a list of tables in the database.
+
+Question: 
+{question}
+
+Tables:
+{tables_list}
+
+You are to determine if the question given is in scope to be answered by our database. If you are unsure, default to in_scope = True.
+
+These are potential reasons why a question can be out of scope, but are not limited to these reasons: 
+1. Complete Nonsense (For Example: skljdfhksdjhgksdhgkhsdfjkgh)
+2. Question has nothing to do with Sports (For example: What is the percent return on the S&P 500 today?)
+3. Question asks about another sport (For example: How many goals did Lionel Messi Score for FC Barcelona?)
+4. A question is related to Basketball, but it's not the NBA (For Example: Who scored the most points at Duke University?)
+5. A question is related to the NBA, but the user asks for results or statistics that are in the future (For example: Lebron James' Points Per Game for a date that did not happen yet)
+6. A question that is related to the NBA, but our data can't answer the question (For example: What is the contract amount for Kyrie Irving. There is no table that has contract details)
+"""
+
 ############# For Node 1: Identify Schema
 
 class SchemaLinkingResult(BaseModel):
