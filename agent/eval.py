@@ -38,7 +38,13 @@ eval_dataset = eval_client.read_dataset(dataset_name = dataset_name)
 def refuse_check(run, example) -> (dict | None):
     if example.metadata['response_format'] != 'out_of_scope':
         return None # This is not applicable, return None
-    return {"key":"refuse_check","score":run.outputs['error'] is not None}
+    return {"key":"refuse_check","score":run.outputs['refused'] is True}
+
+## Check 1b: Checks for situations where the agent refused to answer a question it should've answered
+def false_refusal_check(run, example) -> (dict | None):
+    if example.metadata['response_format'] == 'out_of_scope':
+        return None # This is not applicable, return None
+    return {"key":"false_refusal_check","score":run.outputs['refused'] is not True}
 
 
 ## Check 2: Checks for situation that it is supposed to return a table
@@ -93,12 +99,15 @@ def run_agent(inputs: dict) -> dict:
         "attempts": 0,
         "response_format": None,
         "response": None,
+        "in_scope": None ,
+        "scope_reason": None,
+        "refused": False
     })
     return final_state
 
 results = evaluate(
     run_agent,
     data = dataset_name,
-    evaluators = [table_check, refuse_check, narrative_correct_check],
-    experiment_prefix = "Baseline",
+    evaluators = [table_check, refuse_check, narrative_correct_check, false_refusal_check],
+    experiment_prefix = "scope_check",
 )

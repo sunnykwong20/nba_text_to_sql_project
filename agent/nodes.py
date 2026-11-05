@@ -20,6 +20,8 @@ from prompts import (
     GenerateSQLResult,
     format_response_prompt,
     FormatResponseResult,
+    ScopeResult
+    ,SCOPE_PROMPT
 )
 
 ## Nodes.py: Makes all Nodes needed for the AI Agent
@@ -37,6 +39,30 @@ load_dotenv(dotenv_path=env_path)
 
 anthropic_api_key = os.getenv("ANTHROPIC_API_KEY")
 llm = ChatAnthropic(model="claude-haiku-5-5",anthropic_api_key = anthropic_api_key)
+
+
+check_scope_llm = llm.with_structured_output(ScopeResult)
+
+def check_scope(state: AgentState) -> dict: 
+
+    ### Checks if the question is in scope of being answered by the LLM
+
+    question = state['question']
+
+    ### Gets table list
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    sql_str = "SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%' ORDER BY name"
+    table_list = [row['name'] for row in run_sql(cursor=cursor,sql_str = sql_str)]
+    tables_list_text = "\n".join(table_list)
+
+    conn.close()
+
+    prompt = SCOPE_PROMPT.format(question=question, tables_list = tables_list_text)
+    result = check_scope_llm.invoke(prompt) 
+
+    return {"in_scope": result.in_scope, "scope_reason":result.scope_reason}
+
 
 schema_linking_llm = llm.with_structured_output(SchemaLinkingResult)
 
@@ -126,10 +152,22 @@ def format_response(state: AgentState)-> dict:
 
     return {"response":result.response}
 
+def refuse_out_of_scope(state:AgentState) -> dict:
+
+    ## Sets what happened in the case the AI Agent refuses to answer a question
+    ## This only gets triggered if the question is out of scope of what the AI Agent can answer. 
+
+    question = state['question']
+    scope_reason = state['scope_reason']
+
+    text_to_sql_logger.warning("refuse out of scope fired: question=%r reason =%r", question, scope_reason)
+
+    return {"response":f"I wasn't able to answer the question '{question}' because it is out of scope. This is the reason: '{scope_reason}' Please try again.", "refused":True}
+
 def give_up(state: AgentState)-> dict:
 
     ## Sets what happened in the case the AI Agent wants to give up. 
-    ## This only gets triggered if more than 3 tries happened and it still returns an error, then 
+    ## This only gets triggered if more than 3 tries happened and it still returns an error
 
     question = state['question']
     sql = state['sql']
@@ -137,4 +175,4 @@ def give_up(state: AgentState)-> dict:
 
     text_to_sql_logger.warning("give_up fired: question=%r sql=%r error=%r", question, sql, error)
 
-    return {"response":f"I wasn't able to answer the question '{question}' after a few tries. Please try again."}
+    return {"response":f"I wasn't able to answer the question '{question}' after a few tries. Please try again.","refused":True}
